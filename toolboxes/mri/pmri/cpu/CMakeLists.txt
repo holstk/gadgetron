@@ -1,0 +1,95 @@
+if (WIN32)
+  ADD_DEFINITIONS(-D__BUILD_GADGETRON_GPUPMRI__)
+  ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
+endif (WIN32)
+
+if(WIN32)
+  link_directories(${Boost_LIBRARY_DIRS})
+endif(WIN32)
+
+include_directories(  
+  ${CMAKE_SOURCE_DIR}/toolboxes/core
+  ${CMAKE_SOURCE_DIR}/toolboxes/core/cpu
+  ${CMAKE_SOURCE_DIR}/toolboxes/core/cpu/math
+  ${CMAKE_SOURCE_DIR}/toolboxes/core/gpu
+  ${CMAKE_SOURCE_DIR}/toolboxes/operators
+  ${CMAKE_SOURCE_DIR}/toolboxes/operators/cpu
+  ${CMAKE_SOURCE_DIR}/toolboxes/fft/cpu
+  ${CMAKE_SOURCE_DIR}/toolboxes/nfft/cpu
+  ${CMAKE_SOURCE_DIR}/toolboxes/solvers
+  ${CMAKE_SOURCE_DIR}/toolboxes/solvers/gpu
+  ${CMAKE_SOURCE_DIR}/toolboxes/solvers/cpu
+  ${CMAKE_SOURCE_DIR}/toolboxes/core/cpu/math
+  ${CMAKE_SOURCE_DIR}/toolboxes/mri/pmri
+  ${CMAKE_SOURCE_DIR}/toolboxes/mri/pmri/gpu
+  ${CUDA_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIR}
+  ${ARMADILLO_INCLUDE_DIRS} 
+  )
+
+add_library(gadgetron_toolbox_cpuparallelmri SHARED 
+    cpu_b1_map.h
+    #spirit_calibration.h
+    #cuCartesianSenseOperator.h
+    #cuNonCartesianKtSenseOperator.h
+    hoNonCartesianSenseOperator.h
+    #cuSpiritOperator.h
+    #cuBuffer.h
+    #cuSenseBuffer.h
+    #cuSenseBufferCg.h
+    hoSenseOperator.h
+    #gpupmri_export.h
+    #htgrappa.h
+    ../gpu/senseOperator.h
+    #sense_utilities.h
+    cpu_b1_map.cpp
+    #b1_map_NIH_Souheil.cu
+    #spirit_calibration.cu
+    #sense_utilities.cu
+    hoSenseOperator.cpp
+    #cuCartesianSenseOperator.cu
+    hoNonCartesianSenseOperator.cpp
+    #cuNonCartesianKtSenseOperator.cu
+    #cuBuffer.cpp
+    #cuSenseBuffer.cpp
+    #cuSenseBufferCg.cpp
+    #cuSpiritBuffer.cpp
+    #htgrappa.cpp
+    #htgrappa.cu
+    #trajectory_utils.h
+    #trajectory_utils.cu
+  )
+
+set_target_properties(gadgetron_toolbox_cpuparallelmri PROPERTIES VERSION ${GADGETRON_VERSION_STRING} SOVERSION ${GADGETRON_SOVERSION})
+
+target_link_libraries(gadgetron_toolbox_cpuparallelmri 
+  #gadgetron_toolbox_gpuparallel_mri
+  gadgetron_toolbox_cpucore
+  gadgetron_toolbox_log
+  gadgetron_toolbox_cpunfft 
+  gadgetron_toolbox_cpucore
+  gadgetron_toolbox_cpucore_math
+  ${FFTW3_LIBRARIES} 
+  #${CUDA_LIBRARIES} 
+  #${CUDA_CUFFT_LIBRARIES} 
+  #${CUDA_CUBLAS_LIBRARIES} 
+  )
+
+install(TARGETS gadgetron_toolbox_cpuparallelmri DESTINATION lib COMPONENT main)
+
+install(FILES 
+	cpu_b1_map.h
+	#sense_utilities.h
+	#htgrappa.h
+	#senseOperator.h
+	hoSenseOperator.h
+	#cuCartesianSenseOperator.h
+	hoNonCartesianSenseOperator.h
+	#cuNonCartesianKtSenseOperator.h
+        #cuSpiritOperator.h
+        #cuBuffer.h
+	#cuSenseBuffer.h
+	#cuSenseBufferCg.h
+	#cuSpiritBuffer.h
+	#gpupmri_export.h
+DESTINATION ${GADGETRON_INSTALL_INCLUDE_PATH} COMPONENT main)
