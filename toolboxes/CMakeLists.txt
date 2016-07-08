@@ -62,3 +62,7 @@ endif ()
 if (ARMADILLO_FOUND AND Boost_FOUND AND PLPLOT_FOUND)
     add_subdirectory(plplot)
 endif ()
+
+
+add_subdirectory(girf_prediction)
+#add_directory(noncartesian)

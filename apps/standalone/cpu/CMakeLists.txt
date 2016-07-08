@@ -46,3 +46,7 @@ add_subdirectory(registration)
 if(ISMRMRD_FOUND)
   add_subdirectory(gtplus)
 endif()
+
+
+add_subdirectory(mri)
+add_subdirectory(nfft)
