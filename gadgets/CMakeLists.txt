@@ -105,3 +105,7 @@ if(PLPLOT_FOUND)
         add_subdirectory(plplot)
     endif ()
 endif()
+
+
+add_subdirectory(ga_nfft)
+add_subdirectory(cg_sense)
