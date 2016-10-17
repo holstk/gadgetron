@@ -4,9 +4,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <!--
-        Gadgetron generic recon chain for 2DT cartesian sampling with the Nonlinear SPIRIT reconstruction
+        Gadgetron kspace binning recon for 2DT cardiac MRI
 
-        RealTime Cine imaging on the cloud, using the distribution gadget
         Triggered by slice
         Recon N is phase and S is set
 
@@ -18,12 +17,9 @@
 
     <!-- reader -->
     <reader><slot>1008</slot><dll>gadgetron_mricore</dll><classname>GadgetIsmrmrdAcquisitionMessageReader</classname></reader>
-    <reader><slot>1022</slot><dll>gadgetron_mricore</dll><classname>MRIImageReader</classname></reader>
-    <reader><slot>1024</slot><dll>gadgetron_compression</dll><classname>GadgetIsmrmrdCompressedAcquisitionMessageReader</classname></reader>
 
     <!-- writer -->
     <writer><slot>1022</slot><dll>gadgetron_mricore</dll><classname>MRIImageWriter</classname></writer>
-    <writer><slot>1008</slot><dll>gadgetron_mricore</dll><classname>GadgetIsmrmrdAcquisitionMessageWriter</classname></writer>
 
     <!-- Noise prewhitening -->
     <gadget><name>NoiseAdjust</name><dll>gadgetron_mricore</dll><classname>NoiseAdjustGadget</classname></gadget>
@@ -33,15 +29,6 @@
 
     <!-- RO oversampling removal -->
     <gadget><name>RemoveROOversampling</name><dll>gadgetron_mricore</dll><classname>RemoveROOversamplingGadget</classname></gadget>
-
-    <!-- Distribute slice over nodes -->
-    <gadget>
-      <name>Distribute</name>
-      <dll>gadgetron_distributed</dll>
-      <classname>IsmrmrdAcquisitionDistributeGadget</classname>
-      <property><name>parallel_dimension</name><value>slice</value></property>
-      <property><name>use_this_node_for_compute</name><value>false</value></property>
-    </gadget>
 
     <!-- Data accumulation and trigger gadget -->
     <gadget>
@@ -58,9 +45,8 @@
         <classname>BucketToBufferGadget</classname>
         <property><name>N_dimension</name><value>phase</value></property>
         <property><name>S_dimension</name><value>set</value></property>
-        <property><name>split_slices</name><value>false</value></property>
+        <property><name>split_slices</name><value>true</value></property>
         <property><name>ignore_segment</name><value>true</value></property>
-        <property><name>verbose</name><value>true</value></property>
     </gadget>
 
     <!-- Prep ref -->
@@ -90,7 +76,7 @@
 
         <!-- parameters for debug and timing -->
         <property><name>debug_folder</name><value></value></property>
-        <property><name>perform_timing</name><value>true</value></property>
+        <property><name>perform_timing</name><value>false</value></property>
         <property><name>verbose</name><value>false</value></property>
 
         <property><name>average_all_ref_N</name><value>true</value></property>
@@ -98,34 +84,56 @@
 
         <!-- Up stream coil compression -->
         <property><name>upstream_coil_compression</name><value>true</value></property>
-        <property><name>upstream_coil_compression_thres</name><value>0.001</value></property>
+        <property><name>upstream_coil_compression_thres</name><value>-1</value></property>
         <property><name>upstream_coil_compression_num_modesKept</name><value>0</value></property>
     </gadget>
 
     <!-- Recon -->
     <gadget>
         <name>Recon</name>
-        <dll>gadgetron_mricore</dll>
-        <classname>GenericReconCartesianNonLinearSpirit2DTGadget</classname>
+        <dll>gadgetron_cmr</dll>
+        <classname>CmrCartesianKSpaceBinningCineGadget</classname>
 
-        <!-- image series -->
-        <property><name>image_series</name><value>0</value></property>
+        <property><name>number_of_output_phases</name><value>30</value></property>
+        <property><name>send_out_raw</name><value>false</value></property>
+        <property><name>send_out_multiple_series_by_slice</name><value>true</value></property>
 
-        <!-- Coil map estimation, Inati or Inati_Iter -->
-        <property><name>coil_map_algorithm</name><value>Inati</value></property>
+        <property><name>use_multiple_channel_recon</name><value>true</value></property>
+        <property><name>use_nonlinear_binning_recon</name><value>true</value></property>
 
-        <!-- parameters for SPIRIT recon -->
-        <property><name>spirit_parallel_imaging_lamda</name><value>1.0</value></property>
-        <property><name>spirit_data_fidelity_lamda</name><value>1.0</value></property>
-        <property><name>spirit_reg_name</name><value>db2</value></property>
-        <property><name>spirit_reg_level</name><value>1</value></property>
-        <property><name>spirit_reg_keep_approx_coeff</name><value>true</value></property>
-        <property><name>spirit_reg_keep_redundant_dimension_coeff</name><value>false</value></property>
-        <property><name>spirit_reg_proximity_across_cha</name><value>false</value></property>
-        <property><name>spirit_reg_use_coil_sen_map</name><value>false</value></property>
-        <property><name>spirit_reg_RO_weighting_ratio</name><value>1.0</value></property>
-        <property><name>spirit_reg_E1_weighting_ratio</name><value>1.0</value></property>
-        <property><name>spirit_print_iter</name><value>true</value></property>
+        <property><name>time_tick</name><value>2.5</value></property>
+        <property><name>arrhythmia_rejector_factor</name><value>0.25</value></property>
+
+        <!-- parameters for raw recon -->
+        <property><name>grappa_kSize_RO</name><value>5</value></property>
+        <property><name>grappa_kSize_E1</name><value>4</value></property>
+        <property><name>grappa_reg_lamda</name><value>0.0005</value></property>
+        <property><name>downstream_coil_compression_num_modesKept</name><value>0</value></property>
+        <property><name>downstream_coil_compression_thres</name><value>0.025</value></property>
+
+        <!-- parameters for binning recon -->
+        <property><name>kspace_binning_interpolate_heart_beat_images</name><value>true</value></property>
+        <property><name>kspace_binning_navigator_acceptance_window</name><value>0.65</value></property>
+        <property><name>kspace_binning_max_temporal_window</name><value>2.0</value></property>
+        <property><name>kspace_binning_minimal_cardiac_phase_width</name><value>25.0</value></property>
+
+        <property><name>kspace_binning_moco_reg_strength</name><value>12.0</value></property>
+        <property><name>kspace_binning_moco_iters</name><value>32 64 100 100 100</value></property>
+
+        <property><name>kspace_binning_kSize_RO</name><value>7</value></property>
+        <property><name>kspace_binning_kSize_E1</name><value>7</value></property>
+        <property><name>kspace_binning_reg_lamda</name><value>0.005</value></property>
+        <property><name>kspace_binning_linear_iter_max</name><value>90</value></property>
+        <property><name>kspace_binning_linear_iter_thres</name><value>0.0005</value></property>
+
+        <property><name>kspace_binning_nonlinear_iter_max</name><value>25</value></property>
+        <property><name>kspace_binning_nonlinear_iter_thres</name><value>0.004</value></property>
+        <property><name>kspace_binning_nonlinear_data_fidelity_lamda</name><value>1.0</value></property>
+        <property><name>kspace_binning_nonlinear_image_reg_lamda</name><value>0.00015</value></property>
+        <property><name>kspace_binning_nonlinear_reg_N_weighting_ratio</name><value>10.0</value></property>
+        <property><name>kspace_binning_nonlinear_reg_use_coil_sen_map</name><value>false</value></property>
+        <property><name>kspace_binning_nonlinear_reg_with_approx_coeff</name><value>true</value></property>
+        <property><name>kspace_binning_nonlinear_reg_wav_name</name><value>db2</value></property>
 
         <!-- parameters for debug and timing -->
         <property><name>debug_folder</name><value></value></property>
@@ -182,7 +190,7 @@
         <property><name>filterE2_width</name><value>0.15</value></property>
     </gadget>
 
-    <!-- FOV Adjustment -->
+        <!-- FOV Adjustment -->
     <gadget>
         <name>FOVAdjustment</name>
         <dll>gadgetron_mricore</dll>
@@ -219,27 +227,6 @@
         <classname>ImageArraySplitGadget</classname>
     </gadget>
 
-    <!-- Collect images from nodes -->
-    <gadget>
-        <name>Collect</name>
-        <dll>gadgetron_distributed</dll>
-        <classname>CollectGadget</classname>
-    </gadget>
-
-    <!-- Physio interpolation -->
-    <gadget>
-        <name>PhysioInterpolation</name>
-        <dll>gadgetron_mricore</dll>
-        <classname>PhysioInterpolationGadget</classname>
-        <property><name>phases</name><value>30</value></property>
-        <!-- 0=seperate series for each complete RR -->
-        <!-- 1=First complete RR interval only -->
-        <property><name>mode</name><value>0</value></property>
-        <property><name>first_beat_on_trigger</name><value>true</value></property>
-        <!-- "Spline" or "BSpline" -->
-        <property><name>interp_method</name><value>BSpline</value></property>
-    </gadget>
-
     <!-- after recon processing -->
     <gadget>
         <name>ComplexToFloatAttrib</name>
@@ -251,7 +238,6 @@
         <name>FloatToShortAttrib</name>
         <dll>gadgetron_mricore</dll>
         <classname>FloatToUShortGadget</classname>
-
         <property><name>max_intensity</name><value>32767</value></property>
         <property><name>min_intensity</name><value>0</value></property>
         <property><name>intensity_offset</name><value>0</value></property>

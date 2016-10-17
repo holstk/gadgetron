@@ -204,6 +204,71 @@ namespace Gadgetron {
         return imageNum;
     }
 
+    int GenericReconGadget::prep_image_header_send_out(IsmrmrdImageArray& res, size_t n, size_t s, size_t slc, size_t encoding, int series_num, const std::string& data_role)
+    {
+        try
+        {
+            size_t RO = res.data_.get_size(0);
+            size_t E1 = res.data_.get_size(1);
+            size_t E2 = res.data_.get_size(2);
+            size_t CHA = res.data_.get_size(3);
+            size_t N = res.data_.get_size(4);
+            size_t S = res.data_.get_size(5);
+            size_t SLC = res.data_.get_size(6);
+
+            res.headers_(n, s, slc).image_index = (uint16_t)this->compute_image_number(res.headers_(n, s, slc), encoding, CHA, 0, E2);
+            res.headers_(n, s, slc).image_series_index = series_num;
+
+            size_t offset = n + s*N + slc*N*S;
+            res.meta_[offset].set(GADGETRON_IMAGENUMBER, (long)res.headers_(n, s, slc).image_index);
+            res.meta_[offset].set(GADGETRON_IMAGEPROCESSINGHISTORY, "GT");
+
+            if (data_role == GADGETRON_IMAGE_REGULAR)
+            {
+                res.headers_(n, s, slc).image_type = ISMRMRD::ISMRMRD_IMTYPE_MAGNITUDE;
+
+                res.meta_[offset].append(GADGETRON_IMAGECOMMENT, "GT");
+
+                res.meta_[offset].append(GADGETRON_SEQUENCEDESCRIPTION, "_GT");
+                res.meta_[offset].set(GADGETRON_DATA_ROLE, GADGETRON_IMAGE_REGULAR);
+            }
+            else if (data_role == GADGETRON_IMAGE_GFACTOR)
+            {
+                res.headers_(n, s, slc).image_type = ISMRMRD::ISMRMRD_IMTYPE_MAGNITUDE;
+
+                res.meta_[offset].append(GADGETRON_IMAGECOMMENT, GADGETRON_IMAGE_GFACTOR);
+                res.meta_[offset].append(GADGETRON_SEQUENCEDESCRIPTION, GADGETRON_IMAGE_GFACTOR);
+                res.meta_[offset].set(GADGETRON_DATA_ROLE, GADGETRON_IMAGE_GFACTOR);
+
+                // set the skip processing flag, so gfactor map will not be processed during e.g. partial fourier handling or kspace filter gadgets
+                res.meta_[offset].set(GADGETRON_SKIP_PROCESSING_AFTER_RECON, (long)1);
+            }
+            else if (data_role == GADGETRON_IMAGE_SNR_MAP)
+            {
+                res.headers_(n, s, slc).image_type = ISMRMRD::ISMRMRD_IMTYPE_MAGNITUDE;
+
+                res.meta_[offset].append(GADGETRON_IMAGECOMMENT, GADGETRON_IMAGE_SNR_MAP);
+                res.meta_[offset].append(GADGETRON_SEQUENCEDESCRIPTION, GADGETRON_IMAGE_SNR_MAP);
+                res.meta_[offset].set(GADGETRON_DATA_ROLE, GADGETRON_IMAGE_SNR_MAP);
+            }
+            else if (data_role == GADGETRON_IMAGE_RETRO)
+            {
+                res.headers_(n, s, slc).image_type = ISMRMRD::ISMRMRD_IMTYPE_MAGNITUDE;
+
+                res.meta_[offset].append(GADGETRON_IMAGECOMMENT, "RETRO");
+                res.meta_[offset].append(GADGETRON_SEQUENCEDESCRIPTION, "RETRO");
+                res.meta_[offset].set(GADGETRON_DATA_ROLE, GADGETRON_IMAGE_RETRO);
+            }
+        }
+        catch (...)
+        {
+            GERROR_STREAM("Errors in GenericReconGadget::prep_image_header_send_out(...) ... ");
+            return GADGET_FAIL;
+        }
+
+        return GADGET_OK;
+    }
+
     int GenericReconGadget::send_out_image_array(IsmrmrdReconBit& recon_bit, IsmrmrdImageArray& res, size_t encoding, int series_num, const std::string& data_role)
     {
         try
@@ -226,53 +291,7 @@ namespace Gadgetron {
                 {
                     for (n = 0; n < N; n++)
                     {
-                        ISMRMRD::ImageHeader header = res.headers_(n, s, slc);
-
-                        // if (header.measurement_uid == 0) continue;
-
-                        res.headers_(n, s, slc).image_index = (uint16_t)this->compute_image_number(res.headers_(n, s, slc), encoding, CHA, 0, E2);
-                        res.headers_(n, s, slc).image_series_index = series_num;
-
-                        size_t offset = n + s*N + slc*N*S;
-                        res.meta_[offset].set(GADGETRON_IMAGENUMBER, (long)res.headers_(n, s, slc).image_index);
-                        res.meta_[offset].set(GADGETRON_IMAGEPROCESSINGHISTORY, "GT");
-
-                        if (data_role == GADGETRON_IMAGE_REGULAR)
-                        {
-                            res.headers_(n, s, slc).image_type = ISMRMRD::ISMRMRD_IMTYPE_MAGNITUDE;
-
-                            res.meta_[offset].append(GADGETRON_IMAGECOMMENT, "GT");
-
-                            res.meta_[offset].append(GADGETRON_SEQUENCEDESCRIPTION, "_GT");
-                            res.meta_[offset].set(GADGETRON_DATA_ROLE, GADGETRON_IMAGE_REGULAR);
-                        }
-                        else if (data_role == GADGETRON_IMAGE_GFACTOR)
-                        {
-                            res.headers_(n, s, slc).image_type = ISMRMRD::ISMRMRD_IMTYPE_MAGNITUDE;
-
-                            res.meta_[offset].append(GADGETRON_IMAGECOMMENT, GADGETRON_IMAGE_GFACTOR);
-                            res.meta_[offset].append(GADGETRON_SEQUENCEDESCRIPTION, GADGETRON_IMAGE_GFACTOR);
-                            res.meta_[offset].set(GADGETRON_DATA_ROLE, GADGETRON_IMAGE_GFACTOR);
-
-                            // set the skip processing flag, so gfactor map will not be processed during e.g. partial fourier handling or kspace filter gadgets
-                            res.meta_[offset].set(GADGETRON_SKIP_PROCESSING_AFTER_RECON, (long)1);
-                        }
-                        else if (data_role == GADGETRON_IMAGE_SNR_MAP)
-                        {
-                            res.headers_(n, s, slc).image_type = ISMRMRD::ISMRMRD_IMTYPE_MAGNITUDE;
-
-                            res.meta_[offset].append(GADGETRON_IMAGECOMMENT, GADGETRON_IMAGE_SNR_MAP);
-                            res.meta_[offset].append(GADGETRON_SEQUENCEDESCRIPTION, GADGETRON_IMAGE_SNR_MAP);
-                            res.meta_[offset].set(GADGETRON_DATA_ROLE, GADGETRON_IMAGE_SNR_MAP);
-                        }
-                        else if (data_role == GADGETRON_IMAGE_RETRO)
-                        {
-                            res.headers_(n, s, slc).image_type = ISMRMRD::ISMRMRD_IMTYPE_MAGNITUDE;
-
-                            res.meta_[offset].append(GADGETRON_IMAGECOMMENT, "RETRO");
-                            res.meta_[offset].append(GADGETRON_SEQUENCEDESCRIPTION, "RETRO");
-                            res.meta_[offset].set(GADGETRON_DATA_ROLE, GADGETRON_IMAGE_RETRO);
-                        }
+                        GADGET_CHECK_RETURN(this->prep_image_header_send_out(res, n, s, slc, encoding, series_num, data_role)==GADGET_OK, GADGET_FAIL);
 
                         if (verbose.value())
                         {
@@ -398,7 +417,6 @@ namespace Gadgetron {
                 }
             }
 
-/**
             if (!debug_folder_full_path_.empty())
             {
                 std::stringstream os;
@@ -406,14 +424,12 @@ namespace Gadgetron {
 
                 gt_exporter_.export_array_complex(ref_coil_map, debug_folder_full_path_ + "ref_coil_map_before_filtering_" + os.str());
             }
-**/
 
             // filter the ref_coil_map
             if (filter_RO_ref_coi_map_.get_size(0) != RO)
             {
                 Gadgetron::generate_symmetric_filter_ref(ref_coil_map.get_size(0), ref_.sampling_.sampling_limits_[0].min_, ref_.sampling_.sampling_limits_[0].max_, filter_RO_ref_coi_map_);
 
-/**
                 if (!debug_folder_full_path_.empty())
                 {
                     std::stringstream os;
@@ -421,14 +437,12 @@ namespace Gadgetron {
 
                     gt_exporter_.export_array_complex(filter_RO_ref_coi_map_, debug_folder_full_path_ + "filter_RO_ref_coi_map_" + os.str());
                 }
-**/
             }
 
             if (filter_E1_ref_coi_map_.get_size(0) != E1)
             {
                 Gadgetron::generate_symmetric_filter_ref(ref_coil_map.get_size(1), 0, E1-1, filter_E1_ref_coi_map_);
 
-/**
                 if (!debug_folder_full_path_.empty())
                 {
                     std::stringstream os;
@@ -436,14 +450,12 @@ namespace Gadgetron {
 
                     gt_exporter_.export_array_complex(filter_E1_ref_coi_map_, debug_folder_full_path_ + "filter_E1_ref_coi_map_" + os.str());
                 }
-**/
             }
 
             if ( (E2 > 1) && (filter_E2_ref_coi_map_.get_size(0) != E2) )
             {
                 Gadgetron::generate_symmetric_filter_ref(ref_coil_map.get_size(2), 0, E2-1, filter_E2_ref_coi_map_);
 
-/**
                 if (!debug_folder_full_path_.empty())
                 {
                     std::stringstream os;
@@ -451,7 +463,6 @@ namespace Gadgetron {
 
                     gt_exporter_.export_array_complex(filter_E2_ref_coi_map_, debug_folder_full_path_ + "filter_E2_ref_coi_map_" + os.str());
                 }
-**/
             }
 
             hoNDArray< std::complex<float> > ref_recon_buf;
@@ -465,7 +476,6 @@ namespace Gadgetron {
                 Gadgetron::apply_kspace_filter_ROE1(ref_coil_map, filter_RO_ref_coi_map_, filter_E1_ref_coi_map_, ref_recon_buf);
             }
 
-/**
             if (!debug_folder_full_path_.empty())
             {
                 std::stringstream os;
@@ -473,7 +483,6 @@ namespace Gadgetron {
 
                 gt_exporter_.export_array_complex(ref_recon_buf, debug_folder_full_path_ + "ref_coil_map_after_filtering_" + os.str());
             }
-**/
 
             // pad the ref_coil_map into the data array
             Gadgetron::pad(recon_RO, recon_E1, recon_E2, &ref_recon_buf, &ref_coil_map);
@@ -481,7 +490,6 @@ namespace Gadgetron {
             std::vector<size_t> dim = *ref_data.get_dimensions();
             ref_calib.create(dim, ref_data.begin());
 
-/**
             if (!debug_folder_full_path_.empty())
             {
                 std::stringstream os;
@@ -490,7 +498,6 @@ namespace Gadgetron {
                 gt_exporter_.export_array_complex(ref_coil_map, debug_folder_full_path_ + "ref_coil_map_" + os.str());
                 gt_exporter_.export_array_complex(ref_calib, debug_folder_full_path_ + "ref_calib_" + os.str());
             }
-**/
         }
         catch (...)
         {
@@ -515,13 +522,13 @@ namespace Gadgetron {
                 Gadgetron::hoNDFFT<float>::instance()->ifft2c(ref_coil_map, complex_im_recon_buf_);
             }
 
-            /*if (!debug_folder_full_path_.empty())
+            if (!debug_folder_full_path_.empty())
             {
                 std::stringstream os;
                 os << "encoding_" << e;
 
                 gt_exporter_.export_array_complex(complex_im_recon_buf_, debug_folder_full_path_ + "complex_im_for_coil_map_" + os.str());
-            }*/
+            }
 
             if (coil_map_algorithm.value() == "Inati")
             {
@@ -541,13 +548,13 @@ namespace Gadgetron {
                 Gadgetron::coil_map_Inati_Iter(complex_im_recon_buf_, coil_map, ks, kz, iterNum, thres);
             }
 
-            /*if (!debug_folder_full_path_.empty())
+            if (!debug_folder_full_path_.empty())
             {
                 std::stringstream os;
                 os << "encoding_" << e;
 
                 gt_exporter_.export_array_complex(coil_map, debug_folder_full_path_ + "coil_map_" + os.str());
-            }*/
+            }
         }
         catch (...)
         {
