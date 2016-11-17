@@ -53,7 +53,9 @@ add_library(gadgetron_cpu_nfft SHARED
   cpuNFFTGadget3d.h cpuNFFTGadget3d.cpp
   cpuNFFTGadget3d_lin.h cpuNFFTGadget3d_lin.cpp
   cpu_girf_NFFTGadget2d.h cpu_girf_NFFTGadget2d.cpp
+  cpu_csm_gadget_3d.h cpu_csm_gadget_3d.cpp
   #cpuCgSenseGadget2d.h cpuCgSenseGadget2d.cpp
+  cpuNFFTGadget3d_bin.h cpuNFFTGadget3d_bin.cpp
 
   #${PHASE_GADGET}
   )
@@ -94,6 +96,8 @@ install (FILES  #gadgetron_radial_export.h
 		cpuNFFTGadget3d.h
 		cpuNFFTGadget3d_lin.h
 		cpu_girf_NFFTGadget2d.h
+		cpu_csm_gadget_3d.h
+		cpuNFFTGadget3d_bin.h
 		
                 DESTINATION ${GADGETRON_INSTALL_INCLUDE_PATH} COMPONENT main)
 

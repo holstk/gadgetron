@@ -1,5 +1,5 @@
-#ifndef CPUNFFTGADGET2D_H
-#define CPUNFFTGADGET2D_H
+#ifndef CPUNFFTGADGET3D_H
+#define CPUNFFTGADGET3D_H
 
 #include "Gadget.h"
 #include "gadgetron_mricore_export.h"
@@ -14,32 +14,34 @@
 
 namespace Gadgetron{
 
-  class EXPORTGADGETSMRICORE cpuNFFTGadget2d : 
+  class EXPORTGADGETSMRICORE cpuNFFTGadget3d : 
   public Gadget1<IsmrmrdReconData>
     {
     public:
-      GADGET_DECLARE(cpuNFFTGadget2d)
-      cpuNFFTGadget2d();
+      GADGET_DECLARE(cpuNFFTGadget3d)
+      cpuNFFTGadget3d();
 	
     protected:
       virtual int process(GadgetContainerMessage<IsmrmrdReconData>* m1);
       long long image_counter_;
+      unsigned int Ndims;
+      //std::vector<size_t> im_dims(3);      
+      int im_dims[3];
+      int grid_dims[3];
       int im_size;
-      int im_size_os;
+      int grid_size;
       float grid_oversampling_factor;
       float ro_oversampling_factor;
       int cut_off;
-      int num_spokes;
-      int num_samples_per_spoke;
-      uint64d2 matrix_size;
-      uint64d2 matrix_size_os;
-      float alpha;
-      float kernel_width;
+      int Nspokes;
+      int NsamplesPerSpoke;
 
+      //hoNDArray<typename reald<float,3>::Type> trajectory;
+      //hoNDArray<float> trajectory;
       hoNDArray<float> DCF;
       hoNDArray<complext<float>> kspace;
       hoNDArray<complext<float>> samples_single_coil;
   
     };
 }
-#endif //CPUNFFTGADGET2D_H
+#endif //CPUNFFTGADGET3D_H

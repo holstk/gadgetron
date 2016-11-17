@@ -1,5 +1,5 @@
   
-#include "cpuCgSenseGadget2d.h"
+#include "cpuCgSenseGadget3d.h"
 #include "hoNDFFT.h"
 #include "hoNDArray_math.h"
 #include "hoNFFT.h"
@@ -22,24 +22,24 @@
 
 namespace Gadgetron{
 
-cpuCgSenseGadget2d::cpuCgSenseGadget2d()
+cpuCgSenseGadget3d::cpuCgSenseGadget3d()
   : image_counter_(0)
 {
 }
 
 
-int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
+int cpuCgSenseGadget3d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
 {
     GadgetronTimer nfft_clock;
-    std::string save_path_2d = "/mnt/scratch/karen/go/";
-    bool do_save_2d = true;
+    std::string save_path_3d = "/mnt/scratch/karen/go/";
+    bool do_save_3d = false;
 
 
     //Iterate over all the recon bits
     for(std::vector<IsmrmrdReconBit>::iterator it = m1->getObjectPtr()->rbit_.begin();
         it != m1->getObjectPtr()->rbit_.end(); ++it)
     {
-	std::cout << "In 2d sense gadget" << std::endl;
+	std::cout << "In 3d sense gadget" << std::endl;
 
 	
 	// ============================================== //
@@ -86,7 +86,7 @@ int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
 	// ========= Define constants and image ========= //
 	// ============================================== //
 
-        constexpr unsigned int dim = 2;
+        constexpr unsigned int dim = 3;
 	grid_oversampling_factor = 2.0; //alpha
 	ro_oversampling_factor = 2.0;
 	kernel_width = 5.5;  //original: 5.5;
@@ -105,7 +105,7 @@ int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
 	alpha = (float)matrix_size_os[0] / (float)matrix_size[0];
 
 	//Image matrix - dimension dependent
-	imarray.data_.create(matrix_size[0], matrix_size[1], 1, data_dims[3], data_dims[4], data_dims[5], data_dims[6]);
+	imarray.data_.create(matrix_size[0], matrix_size[1], matrix_size[2], data_dims[3], data_dims[4], data_dims[5], data_dims[6]);
         
 	std::vector<size_t> image_dims = to_std_vector(matrix_size);
 	image_dims.push_back(CHA);
@@ -175,7 +175,7 @@ int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
                                                                          n, s, loc);                    
                     imarray.headers_(n,s,loc).matrix_size[0]     = image_dims[0];
                     imarray.headers_(n,s,loc).matrix_size[1]     = image_dims[1];
-                    imarray.headers_(n,s,loc).matrix_size[2]     = 1;
+                    imarray.headers_(n,s,loc).matrix_size[2]     = image_dims[2];
                     imarray.headers_(n,s,loc).field_of_view[0]   = dbuff.sampling_.recon_FOV_[0];
                     imarray.headers_(n,s,loc).field_of_view[1]   = dbuff.sampling_.recon_FOV_[1];
                     imarray.headers_(n,s,loc).field_of_view[2]   = dbuff.sampling_.recon_FOV_[2];
@@ -237,21 +237,28 @@ int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
 		    // ============ Coil sensitivity map ============ //
 		    // ============================================== //
 		    
+		    std::cout << "Calculating coil sensitivity map:\n";
+		    GadgetronTimer coil_sensitivity_time;
+
+		    std::cout << "   NFFT for coil images\n";
 		    hoNDArray< complext<float> > coil_images(&image_dims);
 		    plan.compute( &samples, &coil_images, &DCF, 8 );
 
+		    std::cout << "   Calculating CSM\n";
 		    hoNDArray< complext<float> > csm(&image_dims);
 		    estimate_b1_map<float,dim>( &coil_images, &csm, CHA);
 
+		    
+
 		    /* WRITE */ 
-		    if (do_save_2d){
+		    if (do_save_3d){
 			hoNDArray<std::complex<float> > go(csm.get_dimensions(), (std::complex<float>*) csm.get_data_ptr());
-			std::string filename = save_path_2d + "csm.cplx";
+			std::string filename = save_path_3d + "csm.cplx";
 			write_nd_array<std::complex<float> >(&go, filename.c_str());
 		    }
-		    if (do_save_2d){
+		    if (do_save_3d){
 			hoNDArray<std::complex<float> > go(coil_images.get_dimensions(), (std::complex<float>*) coil_images.get_data_ptr());
-			std::string filename = save_path_2d + "coil_images.cplx";
+			std::string filename = save_path_3d + "coil_images.cplx";
 			write_nd_array<std::complex<float> >(&go, filename.c_str());
 		    }
 
@@ -277,7 +284,7 @@ int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
 		    // =============== Sense operator =============== //
 		    // ============================================== //
 
-		    int num_iterations = 10;
+		    int num_iterations = 8;
 		    float kappa = 0.3;
 
 		    boost::shared_ptr< hoNDArray<float> >dcw( new hoNDArray<float>(DCF) );
@@ -327,14 +334,14 @@ int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
 
 
 		    /* WRITE */ 
-		    if (do_save_2d){
+		    if (do_save_3d){
 			hoNDArray<std::complex<float> > go(precon_weights->get_dimensions(), (std::complex<float>*)precon_weights.get()->begin());
-			std::string filename = save_path_2d + "precon_weights.cplx";
+			std::string filename = save_path_3d + "precon_weights.cplx";
 			write_nd_array<std::complex<float> >(&go, filename.c_str());
 		    }
-		    if (do_save_2d){
+		    if (do_save_3d){
 			hoNDArray<std::complex<float> > go(reg_image_->get_dimensions(), (std::complex<float>*)reg_image_.get()->begin());
-			std::string filename = save_path_2d + "reg_image_.cplx";
+			std::string filename = save_path_3d + "reg_image_.cplx";
 			write_nd_array<std::complex<float> >(&go, filename.c_str());
 		    }
 
@@ -360,12 +367,12 @@ int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
 
 		    // Setup conjugate gradient solver
 		    hoCgSolver<complext<float>, float > cg;
-		    //cg.set_preconditioner ( D );           // preconditioning matrix
-		    cg.set_max_iterations( 50 );//num_iterations );
+		    cg.set_preconditioner ( D );           // preconditioning matrix
+		    cg.set_max_iterations( num_iterations );
 		    cg.set_tc_tolerance( 1e-6 );
 		    cg.set_output_mode( hoCgSolver<complext<float>, float >::OUTPUT_VERBOSE );
 		    cg.set_encoding_operator( E );        // encoding matrix
-		    //cg.add_regularization_operator( R );  // regularization matrix
+		    cg.add_regularization_operator( R );  // regularization matrix
 	
 
 
@@ -405,5 +412,5 @@ int cpuCgSenseGadget2d::process( GadgetContainerMessage<IsmrmrdReconData>* m1)
 
 }
 
-GADGET_FACTORY_DECLARE(cpuCgSenseGadget2d)
+GADGET_FACTORY_DECLARE(cpuCgSenseGadget3d)
 }

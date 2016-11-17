@@ -24,20 +24,18 @@ namespace Gadgetron{
     protected:
       virtual int process(GadgetContainerMessage<IsmrmrdReconData>* m1);
       long long image_counter_;
-      unsigned int Ndims;
-      //std::vector<size_t> im_dims(3);      
-      int im_dims[3];
-      int grid_dims[3];
       int im_size;
-      int grid_size;
+      int im_size_os;
       float grid_oversampling_factor;
       float ro_oversampling_factor;
       int cut_off;
-      int Nspokes;
-      int NsamplesPerSpoke;
+      int num_spokes;
+      int num_samples_per_spoke;
+      typename uint64d<3>::Type matrix_size;
+      typename uint64d<3>::Type matrix_size_os;
+      float alpha;
+      float kernel_width;
 
-      //hoNDArray<typename reald<float,3>::Type> trajectory;
-      //hoNDArray<float> trajectory;
       hoNDArray<float> DCF;
       hoNDArray<complext<float>> kspace;
       hoNDArray<complext<float>> samples_single_coil;

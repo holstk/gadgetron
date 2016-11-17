@@ -24,9 +24,6 @@ namespace Gadgetron{
     protected:
       virtual int process(GadgetContainerMessage<IsmrmrdReconData>* m1);
       long long image_counter_;
-      //uint64d3 im_dims;
-      //uint64d3 grid_dims;
-      //uint64d3 sample_dims;
       int im_size;
       int im_size_os;
       float grid_oversampling_factor;

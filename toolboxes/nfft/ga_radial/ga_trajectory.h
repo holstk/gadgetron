@@ -22,7 +22,7 @@ public:
 
     hoNDArray<T> calculateDCF(int Nspokes, int NsamplesPerSpoke, int Ndim, bool cut_off, int grid_size);
 
-    void calculate_angles(int Nspokes, int correction_type);
+    void calculate_angles(int Nspokes, int correction_type, long int *spoke_idx);
 
     T get_azimuthal_angle(int spoke){
 	return azi(spoke);

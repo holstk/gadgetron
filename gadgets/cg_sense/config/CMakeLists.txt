@@ -32,5 +32,7 @@ install (FILES
   #golden_radial_mode2_gpusense_sb_unoptimized.xml 
 
   cg_sense_2d.xml
+  cg_sense_3d.xml
+  cg_sense_3d_bin.xml
 
   DESTINATION ${GADGETRON_INSTALL_CONFIG_PATH} COMPONENT main)

@@ -149,6 +149,8 @@ namespace Gadgetron{
       
         this->iterate( it, &tc_metric, &tc_terminate );
 
+	std::cout << "In cgSolver" << std::endl;
+
         solver_dump( x_.get());
       
         if( tc_terminate )

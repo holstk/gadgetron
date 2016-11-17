@@ -12,7 +12,9 @@ include_directories(
 
 add_library(ga_radial_trajectory SHARED
             ga_trajectory.h ga_trajectory.cpp
-	    linear_radial_trajectory.h linear_radial_trajectory.cpp)
+	    linear_radial_trajectory.h linear_radial_trajectory.cpp
+            rotate_kspace.h rotate_kspace.cpp
+)
 
 target_link_libraries(ga_radial_trajectory
                       gadgetron_toolbox_hostutils 

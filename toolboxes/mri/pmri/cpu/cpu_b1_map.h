@@ -23,4 +23,5 @@ namespace Gadgetron{
     template<class REAL, unsigned int D> void
     estimate_b1_map( hoNDArray<complext<REAL> > *data_in, hoNDArray<complext<REAL> > *data_out, int target_coils);
 
+
 }

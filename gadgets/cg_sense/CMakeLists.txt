@@ -50,7 +50,9 @@ add_library(gadgetron_cpu_cgsense SHARED
   #gpuRadialSpiritPrepGadget.h gpuRadialSpiritPrepGadget.cpp 
   #gpuRetroGatedSensePrepGadget.h gpuRetroGatedSensePrepGadget.cpp
 
-  cpuCgSenseGadget2d.h cpuCgSenseGadget2d.cpp
+  cpuCgSenseGadget2d.h     cpuCgSenseGadget2d.cpp
+  cpuCgSenseGadget3d.h     cpuCgSenseGadget3d.cpp
+  cpuCgSenseGadget3d_bin.h cpuCgSenseGadget3d_bin.cpp
 
   #${PHASE_GADGET}
   )
@@ -87,6 +89,8 @@ install (FILES  #gadgetron_radial_export.h
                 #gpuRetroGatedSensePrepGadget.h
 
 		cpuCgSenseGadget2d.h
+		cpuCgSenseGadget3d.h
+		cpuCgSenseGadget3d_bin.h
 		
                 DESTINATION ${GADGETRON_INSTALL_INCLUDE_PATH} COMPONENT main)
 

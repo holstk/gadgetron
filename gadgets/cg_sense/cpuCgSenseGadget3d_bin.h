@@ -1,5 +1,5 @@
-#ifndef CPUNFFTGADGET2D_H
-#define CPUNFFTGADGET2D_H
+#ifndef CPUCGSENSEGADGET3D_BIN_H
+#define CPUCGSENSEGADGET3D_BIN_H
 
 #include "Gadget.h"
 #include "gadgetron_mricore_export.h"
@@ -14,12 +14,12 @@
 
 namespace Gadgetron{
 
-  class EXPORTGADGETSMRICORE cpuNFFTGadget2d : 
+  class EXPORTGADGETSMRICORE cpuCgSenseGadget3d_bin : 
   public Gadget1<IsmrmrdReconData>
     {
     public:
-      GADGET_DECLARE(cpuNFFTGadget2d)
-      cpuNFFTGadget2d();
+      GADGET_DECLARE(cpuCgSenseGadget3d_bin)
+      cpuCgSenseGadget3d_bin();
 	
     protected:
       virtual int process(GadgetContainerMessage<IsmrmrdReconData>* m1);
@@ -31,15 +31,15 @@ namespace Gadgetron{
       int cut_off;
       int num_spokes;
       int num_samples_per_spoke;
-      uint64d2 matrix_size;
-      uint64d2 matrix_size_os;
+      typename uint64d<3>::Type matrix_size;
+      typename uint64d<3>::Type matrix_size_os;
       float alpha;
       float kernel_width;
-
+      
       hoNDArray<float> DCF;
       hoNDArray<complext<float>> kspace;
       hoNDArray<complext<float>> samples_single_coil;
   
     };
 }
-#endif //CPUNFFTGADGET2D_H
+#endif //CPUCGSENSEGADGET3D_BIN_H

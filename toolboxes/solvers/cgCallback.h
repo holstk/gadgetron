@@ -83,6 +83,8 @@ namespace Gadgetron{
     virtual bool iterate( unsigned int iteration, REAL *tc_metric, bool *tc_terminate )
     {
       *tc_metric = cgTC::get_rq()/rq_0_;
+
+      std::cout << "cgCallback: tc_metric = " << *tc_metric << std::endl;
     
       if( cgTC::cg_->get_output_mode() >= solver<ARRAY_TYPE,ARRAY_TYPE>::OUTPUT_WARNINGS ) {
 	if( cgTC::cg_->get_output_mode() >= solver<ARRAY_TYPE,ARRAY_TYPE>::OUTPUT_VERBOSE ) {

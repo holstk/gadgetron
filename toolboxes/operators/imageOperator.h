@@ -30,19 +30,29 @@ namespace Gadgetron{
       // Make temporary copy of input
       ARRAY_TYPE_OPERATOR tmp(*image);
 
+      
+
       // Normalize to an average energy of "one intensity unit per image element"
       REAL sum = asum( &tmp );
+      std::cout << "imageOperator.h: compute: sum = " << sum << std::endl;
       REAL scale = ( (REAL) tmp.get_number_of_elements()/sum );
+      std::cout << "imageOperator.h: compute: scale = " << scale << std::endl;
       tmp *= scale;
 
       image_ =  abs(&tmp);
+      std::cout << "imageOperator: compute: image_[0] = " << image_->get_data_ptr()[0] << std::endl;
 
       if( offset_estimation )
-	offset_ = estimate_offset();
+	  offset_ = estimate_offset();
+      std::cout << "imageOperator.h: compute: offset_ = " << offset_ << std::endl;
       
       // Reciprocalize image
       if(offset_ > REAL(0)) *image_ += offset_;      
+      std::cout << "imageOperator: compute: image_[0] = " << image_->get_data_ptr()[0] << std::endl;
+
       reciprocal_inplace(image_.get());
+      std::cout << "imageOperator: compute: image_[0] = " << image_->get_data_ptr()[0] << std::endl;
+
     }
     
     // Apply regularization image operator

@@ -37,5 +37,7 @@ install (FILES
   #ga_cg_sense_2d.xml
   linear_recon_3d.xml
   ga_girf_2d.xml
+  csm_recon_3d.xml
+  ga_recon_3d_bin.xml
 
   DESTINATION ${GADGETRON_INSTALL_CONFIG_PATH} COMPONENT main)

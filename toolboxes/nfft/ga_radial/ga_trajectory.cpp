@@ -14,6 +14,9 @@ template <class T, unsigned int D> hoNDArray<typename reald<T,D>::Type> GATrajec
     {
 	throw std::invalid_argument("Received invalid dimension, only 2 or 3 dimensions are supported.");
     }
+    //if (spoke_idx == 0x0)
+    //	throw std::invalid_argument("Received null pointer.");
+	
 
     int number_of_samples = NsamplesPerSpoke * Nspokes;
     trajectory.create(number_of_samples);//,Ndim);
@@ -47,6 +50,9 @@ template <class T, unsigned int D> hoNDArray<typename reald<T,D>::Type> GATrajec
     else
     {
 
+	std::cout << "num_samples_per_spoke = " << NsamplesPerSpoke << std::endl;
+	std::cout << "num_spokes = " << Nspokes << std::endl;
+
 	T basisSpoke[NsamplesPerSpoke];
 	for (int sa = 0 ; sa < NsamplesPerSpoke ; sa++)
 	{
@@ -56,7 +62,7 @@ template <class T, unsigned int D> hoNDArray<typename reald<T,D>::Type> GATrajec
 	if (correction_type == 2)
 	    Nspokes = Nspokes - 6;
       
-	calculate_angles(Nspokes, correction_type);
+	calculate_angles(Nspokes, correction_type, spoke_idx);
 
 	typename reald<T,D>::Type sample_pos;
 	for (int sp = 0 ; sp < Nspokes ; sp++)
@@ -138,7 +144,7 @@ template <class T, unsigned int D> hoNDArray<T> GATrajectory<T,D>::calculateDCF(
 }
 
 
-template <class T, unsigned int D> void GATrajectory<T,D>::calculate_angles(int Nspokes, int correction_type)
+template <class T, unsigned int D> void GATrajectory<T,D>::calculate_angles(int Nspokes, int correction_type, long int *spoke_idx)
 {
     if ( D == 2 ){
 	//Nothing yet...
@@ -156,16 +162,26 @@ template <class T, unsigned int D> void GATrajectory<T,D>::calculate_angles(int 
 
 	if ( correction_type == 0 || correction_type == 2){
 	    for (int sp = 0; sp < Nspokes; sp++){
-		fractional_part1 = sp * golden_mean1 - floor(sp * golden_mean1);
-		fractional_part2 = sp * golden_mean2 - floor(sp * golden_mean2);
-		pol[sp] = acos(fractional_part1);
-		azi[sp] = 2 * M_PI * fractional_part2;
-		
-		//	fractional_part1 = spoke_idx[sp] * golden_mean1 - floor(spoke_idx[sp] * golden_mean1);
-		//	fractional_part2 = spoke_idx[sp] * golden_mean2 - floor(spoke_idx[sp] * golden_mean2);
-		//	polar_angle = acos(fractional_part1);
-		//	azimuthal_angle = 2 * M_PI * fractional_part2;
-	     
+
+		if (spoke_idx == 0x0){
+		    fractional_part1 = sp * golden_mean1 - floor(sp * golden_mean1);
+		    fractional_part2 = sp * golden_mean2 - floor(sp * golden_mean2);
+		    pol[sp] = acos(fractional_part1);
+		    azi[sp] = 2 * M_PI * fractional_part2;
+		}
+		else{
+		    if (sp == 0)
+			std::cout << "In spoke idx ~= 0x0\n";
+		    fractional_part1 = (spoke_idx[sp]-1) * golden_mean1 - floor((spoke_idx[sp]-1) * golden_mean1);
+		    fractional_part2 = (spoke_idx[sp]-1) * golden_mean2 - floor((spoke_idx[sp]-1) * golden_mean2);
+		    pol[sp] = acos(fractional_part1);
+		    azi[sp] = 2 * M_PI * fractional_part2;
+		    if (sp < 10){
+			std::cout << "pol(" << sp << ") = " << pol[sp] << std::endl;
+			std::cout << "azi(" << sp << ") = " << azi[sp] << std::endl;
+			std::cout << "acq_idx(" << sp << ") = " << spoke_idx[sp] << std::endl;
+		    }
+		}
 	    }	    
 	}
 	else if ( correction_type = 1 ){
